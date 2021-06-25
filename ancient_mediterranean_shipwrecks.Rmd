@@ -1,0 +1,172 @@
+---
+title: "Ancient Mediterranean Shipwrecks"
+author: "ADS"
+date: "`r format(Sys.Date(), '%d %b %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE
+  )
+
+library(dplyr)
+library(ggplot2)
+library(ggspatial)
+library(readr)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(rosm)
+library(sf)
+
+shipwrecks <- read_csv("processed_data/shipwrecks.csv")
+
+```
+
+The aim for this challenge is to use a dataset available on the internet to attempt to recreate
+an often-cited graph in Peregrine Horden and Nicholas Purcell's book, *The Corrupting Sea*.
+
+The graph is part of a larger argument in which Horden and Purcell hold out the possibility that
+the volume of sea-borne trade in the Mediterranean was larger in the 2nd century CE than at any
+other time before the 19th century.
+
+# The Challenge
+
+Download a copy of the dataset cited below, import the data, and carry out the following tasks.
+
+> Strauss, Julia. 2013. ‘Shipwrecks Database’. *The Oxford Roman Economy Project*. \
+> oxrep.classics.ox.ac.uk/databases/shipwrecks_database/.
+
+## Dates
+
+The date_range and mid_point_of_date_range variables contain only zeros.
+
+1. Calculate the mid-point and fill the `mid_point_of_date_range` column with data.
+2. Calculate the date range (which amounts to a measure of the uncertainty of the dating) and 
+   fill the `date_range` column with data. Remember that the dates include negative values (BCE).
+
+```{r shipwrecks-dates}
+
+date_range <- function(earliest, latest) {
+  abs(latest) - abs(earliest)
+}
+
+
+shipwrecks_dates <- shipwrecks %>% 
+  mutate(
+    date_range = date_range(earliest_date, latest_date)
+  ) %>% 
+  mutate(
+    mid_point_of_date_range = round((earliest_date + latest_date) / 2, 0)
+  )
+
+```
+
+Using the updated data, answer these questions:
+
+1. How many shipwrecks are there in the data?
+1. What is the earliest shipwreck?
+2. What is the latest shipwreck?
+
+```{r}
+shipwrecks_dates %>% 
+  summarise(
+    count = n(),
+    earliest = min(mid_point_of_date_range, na.rm = TRUE),
+    latest = max(mid_point_of_date_range, na.rm = TRUE)
+  )
+```
+
+
+## Locations
+
+1. List the set of countries where the shipwrecks are found. 
+3. How many shipwrecks in the database have a location specified by a valid lat-long pair?
+
+```{r valid-lat-long-count}
+
+shipwrecks_dates %>% 
+  filter(
+    !is.na(latitude) | !is.na(longitude)
+  ) %>% 
+  filter(
+    !(latitude == 0 & longitude == 0)
+  ) %>% 
+  summarise(
+    count = n(),
+    earliest = min(mid_point_of_date_range, na.rm = TRUE),
+    latest = max(mid_point_of_date_range, na.rm = TRUE),
+    min_lat = min(latitude, na.rm = TRUE),
+    max_lat = max(latitude, na.rm = TRUE),
+    min_long = min(longitude, na.rm = TRUE),
+    max_long = max(longitude, na.rm = TRUE)
+  )
+
+```
+
+
+Bonus challenge
+
+1. Plot the shipwrecks on a map (use ggplot and rnaturalearth for the maps).
+
+```{r plot_shipwrecks, fig.height=8}
+# get data for labelling individual countries
+countries <- read_tsv("processed_data/countries.tsv") %>% 
+  # only relevant countries for the shipwreck data
+  filter(
+    name %in% unique(shipwrecks_dates$country)
+  ) %>% 
+  # avoid name clash
+  select(-name)
+# add labelling data onto the Natural Earth countries data
+world <- ne_countries(scale = "medium", returnclass = "sf") %>% 
+  left_join(countries, by = c("iso_a2" = "country"))
+
+shipwrecks_dates_locations <- shipwrecks_dates %>% 
+  filter(
+    !is.na(latitude) | !is.na(longitude)
+  ) %>% 
+  filter(
+    !(latitude == 0 & longitude == 0)
+  )
+
+# make the plot
+ggplot(data = world) +
+  # set up the world map with NE countries data
+  geom_sf() +
+  # layer on points for the shipwrecks
+  geom_point(data = shipwrecks_dates_locations, aes(
+    x = longitude, 
+    y = latitude, 
+    colour = mid_point_of_date_range,
+    ), alpha = 0.75, size = 3) +
+  # add labels for relevant countries
+  geom_label(data = world, aes(x = longitude, y = latitude, label = name), nudge_y = 0.3, size = 3) +
+  # crop the map to the Mediterranean
+  coord_sf(xlim = c(-1, 35), ylim = c(30, 47), expand = TRUE) +
+  # select an appropriate colour scale
+  scale_colour_binned(name = "Approx. date", type = "viridis") +
+  # adjust the overall visual appearance
+  theme_bw() +
+  theme(
+    panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", size = 0.5),
+    panel.background = element_rect(fill = "lightsteelblue1")
+  ) +
+  # add labels for the overall map
+  labs(
+    title = "Ancient Mediterranean shipwrecks",
+    subtitle = "358 wrecks with known location data, 1800 BCE to 1500 CE",
+    caption = "Data from Strauss, Julia. 2013. ‘Shipwrecks Database’. The Oxford Roman Economy Project. oxrep.classics.ox.ac.uk/databases/shipwrecks_database/."
+  ) +
+  # add direction and scale annotations
+  annotation_scale(location = "bl", width_hint = 0.4) +
+    annotation_north_arrow(
+      location = "bl", 
+      which_north = "true",
+      pad_x = unit(1, "cm"),
+      pad_y = unit(1, "cm")
+    )
+
+ggsave("output/shipwrecks_plot.png", device = png)
+```
+
