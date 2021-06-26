@@ -195,9 +195,9 @@ shipwrecks_dates_locations <- shipwrecks_dates %>%
   )
 
 # make the plot
-ggplot(data = world) +
+ggplot() +
   # set up the world map with NE countries data
-  geom_sf(fill = "antiquewhite") +
+  geom_sf(data = world, fill = "antiquewhite") +
   # layer on points for the shipwrecks
   geom_point(
     data = shipwrecks_dates_locations, aes(
@@ -219,13 +219,18 @@ ggplot(data = world) +
   theme_bw() +
   theme(
     panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", size = 0.5),
-    panel.background = element_rect(fill = "lightsteelblue1")
+    panel.background = element_rect(fill = "lightsteelblue1"),
+    plot.caption = ggtext::element_textbox_simple(halign = 1.01, margin = ggplot2::margin(6, 0, 0, 0))
   ) +
   # add labels for the overall map
   labs(
     title = "Ancient Mediterranean shipwrecks",
     subtitle = "358 wrecks with known location data, 1800 BCE to 1500 CE",
-    caption = "Data from Strauss, Julia. 2013. ‘Shipwrecks Database’. The Oxford Roman Economy Project. oxrep.classics.ox.ac.uk/databases/shipwrecks_database/."
+    caption = paste(
+      "Data from Strauss, Julia. 2013. ‘Shipwrecks Database’.",
+      "*The Oxford Roman Economy Project*.",
+      "oxrep.classics.ox.ac.uk/databases/shipwrecks_database/."
+    )
   ) +
   # add direction and scale annotations from the package `ggspatial`
   annotation_scale(location = "bl", width_hint = 0.4) +
