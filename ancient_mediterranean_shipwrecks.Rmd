@@ -68,6 +68,7 @@ Using the updated data, answer these questions:
 1. How many shipwrecks are there in the data?
 1. What is the earliest shipwreck?
 2. What is the latest shipwreck?
+3. How many shipwrecks fall between 100 BCE and 100 CE?
 
 ```{r}
 shipwrecks_dates %>% 
@@ -119,6 +120,48 @@ shipwrecks_dates %>%
 ```
 
 
+## Main challenge
+
+Try to recreate the graph given in Horden and Purcell (2000) as Table 5. Does the contents of the
+Shipwrecks Database, with twenty more years data than Parker 1992, back up the original conclusion?
+
+What improvements can you make to the original presentation of the graph?
+
+```{r}
+
+shipwrecks_dates %>% 
+  ggplot() +
+  geom_histogram(aes(x = mid_point_of_date_range), binwidth = 50) +
+  scale_x_continuous(
+    breaks = c(-2000, -1500, -1000, -500, 1, 500, 1000, 1500),
+    labels = c(
+      "2000 BCE", "1500 BCE", "1000 BCE", "500 BCE", "1 CE", "500 CE", "1000 CE", "1500 CE"
+      )
+  ) +
+  theme_bw() +
+  theme(
+    plot.caption = ggtext::element_textbox_simple(halign = 1, margin = ggplot2::margin(6, 0, 0, 0))
+  ) +
+  labs(
+    x = "Approximate date",
+    y = "Count",
+    title = "Ancient Mediterranean shipwrecks, 2200 BCE to 1500 CE",
+    subtitle = paste0(
+      "On the evidence of shipwrecks, the period 100 BCE to 100 CE was the greatest period of\n",
+      "maritime trade in the Mediterranean until the modern era (Horden and Purcell 2000, 371-372)."
+    ),
+    caption = paste(
+      "Data from Strauss, Julia. 2013. ‘Shipwrecks Database’.",
+      "*The Oxford Roman Economy Project*.",
+      "oxrep.classics.ox.ac.uk/databases/shipwrecks_database/."
+    )
+  )
+
+
+```
+
+
+
 ## Bonus challenge
 
 1. Plot the shipwrecks that have valid long-lat coordinates onto a map (use `ggplot` and 
@@ -154,7 +197,7 @@ shipwrecks_dates_locations <- shipwrecks_dates %>%
 # make the plot
 ggplot(data = world) +
   # set up the world map with NE countries data
-  geom_sf() +
+  geom_sf(fill = "antiquewhite") +
   # layer on points for the shipwrecks
   geom_point(
     data = shipwrecks_dates_locations, aes(
@@ -171,7 +214,7 @@ ggplot(data = world) +
   # crop the map to the Mediterranean
   coord_sf(xlim = c(-1, 35), ylim = c(30, 47), expand = TRUE) +
   # select an appropriate colour scale
-  scale_color_binned(name = "Approx. date", type = "viridis", option = "plasma") +
+  scale_color_viridis_b(name = "Approx.\ndate", option = "plasma") +
   # adjust the overall visual appearance
   theme_bw() +
   theme(
