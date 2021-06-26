@@ -18,6 +18,7 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(rosm)
 library(sf)
+library(viridis)
 
 shipwrecks <- read_csv("processed_data/shipwrecks.csv")
 
@@ -80,8 +81,21 @@ shipwrecks_dates %>%
 
 ## Locations
 
-1. List the set of countries where the shipwrecks are found. 
+1. What countries have the shipwrecks been found in?
+2. How many wrecks have been discovered in each country?
 3. How many shipwrecks in the database have a location specified by a valid lat-long pair?
+
+
+### What countries?
+
+```{r}
+wreck_countries <- unique(shipwrecks_dates$country)
+
+wreck_countries
+```
+
+
+## Shipwrecks with valid lat-long pair?
 
 ```{r valid-lat-long-count}
 
@@ -105,9 +119,16 @@ shipwrecks_dates %>%
 ```
 
 
-Bonus challenge
+## Bonus challenge
 
-1. Plot the shipwrecks on a map (use ggplot and rnaturalearth for the maps).
+1. Plot the shipwrecks that have valid long-lat coordinates onto a map (use `ggplot` and 
+   `rnaturalearth` for the maps).
+      - Read the `ggplot2` in-progress book (3rd edition) about mapping: \
+         [https://ggplot2-book.org/maps.html](https://ggplot2-book.org/maps.html).
+      - Use these snippets to add a map layer from `rnaturalearth`:
+        - `world <- ne_countries(scale = "medium", returnclass = "sf")`
+        - `ggplot(data = world) + geom_sf()`
+2. Create a faceted set of maps on some variable of your choice, e.g. date ranges.
 
 ```{r plot_shipwrecks, fig.height=8}
 # get data for labelling individual countries
@@ -122,7 +143,7 @@ countries <- read_tsv("processed_data/countries.tsv") %>%
 world <- ne_countries(scale = "medium", returnclass = "sf") %>% 
   left_join(countries, by = c("iso_a2" = "country"))
 
-shipwrecks_dates_locations <- shipwrecks_dates %>% 
+shipwrecks_dates_locations <- shipwrecks_dates %>%
   filter(
     !is.na(latitude) | !is.na(longitude)
   ) %>% 
@@ -135,17 +156,22 @@ ggplot(data = world) +
   # set up the world map with NE countries data
   geom_sf() +
   # layer on points for the shipwrecks
-  geom_point(data = shipwrecks_dates_locations, aes(
-    x = longitude, 
-    y = latitude, 
-    colour = mid_point_of_date_range,
-    ), alpha = 0.75, size = 3) +
+  geom_point(
+    data = shipwrecks_dates_locations, aes(
+      x = longitude, 
+      y = latitude, 
+      colour = mid_point_of_date_range,
+    ), 
+    alpha = 0.75, size = 3
+  ) +
   # add labels for relevant countries
-  geom_label(data = world, aes(x = longitude, y = latitude, label = name), nudge_y = 0.3, size = 3) +
+  geom_label(
+    data = world, aes(x = longitude, y = latitude, label = name), nudge_y = 0.3, size = 3
+  ) +
   # crop the map to the Mediterranean
   coord_sf(xlim = c(-1, 35), ylim = c(30, 47), expand = TRUE) +
   # select an appropriate colour scale
-  scale_colour_binned(name = "Approx. date", type = "viridis") +
+  scale_color_binned(name = "Approx. date", type = "viridis", option = "plasma") +
   # adjust the overall visual appearance
   theme_bw() +
   theme(
@@ -158,14 +184,14 @@ ggplot(data = world) +
     subtitle = "358 wrecks with known location data, 1800 BCE to 1500 CE",
     caption = "Data from Strauss, Julia. 2013. ‘Shipwrecks Database’. The Oxford Roman Economy Project. oxrep.classics.ox.ac.uk/databases/shipwrecks_database/."
   ) +
-  # add direction and scale annotations
+  # add direction and scale annotations from the package `ggspatial`
   annotation_scale(location = "bl", width_hint = 0.4) +
-    annotation_north_arrow(
-      location = "bl", 
-      which_north = "true",
-      pad_x = unit(1, "cm"),
-      pad_y = unit(1, "cm")
-    )
+  annotation_north_arrow(
+    location = "bl", 
+    which_north = "true",
+    pad_x = unit(1, "cm"),
+    pad_y = unit(1, "cm")
+  )
 
 ggsave("output/shipwrecks_plot.png", device = png)
 ```
