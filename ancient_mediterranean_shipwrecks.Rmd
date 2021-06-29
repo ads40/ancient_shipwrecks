@@ -3,11 +3,14 @@ title: "Ancient Mediterranean Shipwrecks"
 author: "ADS"
 date: "`r format(Sys.Date(), '%d %b %Y')`"
 output: html_document
+bibliography: biblio.bib
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
-  echo = TRUE
+  echo = FALSE,
+  warning = FALSE,
+  include = FALSE
   )
 
 library(dplyr)
@@ -15,8 +18,6 @@ library(ggplot2)
 library(ggspatial)
 library(readr)
 library(rnaturalearth)
-library(rnaturalearthdata)
-library(rosm)
 library(sf)
 library(viridis)
 
@@ -24,27 +25,92 @@ shipwrecks <- read_csv("processed_data/shipwrecks.csv")
 
 ```
 
-The aim for this challenge is to use a dataset available on the internet to attempt to recreate
-an often-cited graph in Peregrine Horden and Nicholas Purcell's book, *The Corrupting Sea*.
+The starting point for this challenge is an often-cited graph in Peregrine Horden
+and Nicholas Purcell's book, *The Corrupting Sea* [-@horden2000].
 
-The graph is part of a larger argument in which Horden and Purcell hold out the possibility that
-the volume of sea-borne trade in the Mediterranean was larger in the 2nd century CE than at any
-other time before the 19th century.
+![Horden and Purcell (2000), 371](resources/horden_purcell_mediterranean_shipwrecks.png)
+
+The graph featured by Horden and Purcell is part of a larger argument that the volume of sea-borne
+trade in the Mediterranean was larger in the 2nd century CE than at any other time before the 19th
+century.
+
+This argument depends upon several things:
+
+1. The first premise is that Mediterranean commercial ship manufacture and sailing techniques
+   remained relatively consistent from at least 500 BCE until the 16th century CE.
+
+2. The second premise is that the frequency of shipwreck-inducing events in the Mediterranean (e.g.
+   storms) remained relatively consistent over the period (2500 BCE to 1500 CE).
+
+Given these premises, the number of shipwrecks can then constitute a fairly direct index of the
+overall level of maritime economic activity in the Mediterranean.^[For a fuller introduction to the
+possibilities and problems of ancient shipwrecks for economic analysis, see 
+@knappett_shipwrecks_2018.]
+
+Can we recreate this graph using a more recent dataset than Horden and Purcell (who worked from 
+Parker's [-@parker_ancient_1992] book on ancient shipwrecks)? Is Horden and Purcell's argument borne
+out in more up-to-date evidence, especially given the explosion of shipwreck archaeology in the past
+twenty years?
 
 # The Challenge
 
-Download a copy of the dataset cited below, import the data, and carry out the following tasks.
+This challenge is structured in a series of steps, including obtaining the data, modifying the data
+in order to support various forms of analysis, and then presenting findings in tabular and graphic
+forms. These are core tasks in any form of data analysis.
 
-> Strauss, Julia. 2013. ‘Shipwrecks Database’. *The Oxford Roman Economy Project*. \
+For each section, there are a set of questions and tasks. Not all of these will be able to be
+answered with the data in its original form.
+
+# Get the data
+
+Download a copy of the dataset [@strauss_shipwrecks_2013] listed below, import the data, and carry 
+out the following tasks.
+
+> Strauss, Julia. 2013. 'Shipwrecks Database'. *The Oxford Roman Economy Project*.\
 > oxrep.classics.ox.ac.uk/databases/shipwrecks_database/.
 
-## Dates
+1. Set up a new project in RStudio for your analysis. Your project should include the following
+   files and folders:
+   - a `.gitignore` file for R
+   - a `data_raw` directory for downloaded data sources
+   - a `data_processed` directory for cleaned data ready for analysis
+   For the `.gitignore` file, think about whether you want to commit the outputs of your analysis
+   or not (mostly, you should not: outputs are livestock, not pets).
 
-The date_range and mid_point_of_date_range variables contain only zeros.
+2. Download the data. There is zip file of the dataset, which you can find by:
+   - going to the URL above;
+   - scrolling to the bottom of the page;
+   - finding the link embedded in the text, under the word "here".
 
-1. Calculate the mid-point and fill the `mid_point_of_date_range` column with data.
-2. Calculate the date range (which amounts to a measure of the uncertainty of the dating) and 
-   fill the `date_range` column with data. Remember that the dates include negative values (BCE).
+3. Import the data into R. Think about how the columns/variables are named, and what data types are
+   imported. You may wish to modify the column names and/or use a `col_types =` argument (see the
+   docs for `readr::read_csv`) to control how the data is imported.
+
+4. Save the data into your project and then make the initial commit in Git.
+
+```
+# in the Terminal
+> git status
+> git add .
+> git commit -m "Initial commit."
+```
+
+5. Make an initial summary of the variables in the dataset:
+  - What does each column contain?
+  - What is the range of values in each column?
+  - What data is missing (consider both NA values, and other "missing data" values e.g. 0, -1 etc.)?
+
+# Dates
+
+You may have noticed that columns `date_range` and `mid_point_of_date_range` variables contain only
+zeros. Data is missing here, but it is possible to calculate and fill in values for these columns
+using data in other columns.
+
+Fix this missing data.
+
+1. Calculate the mid-point and fill the `mid_point_of_date_range` column.
+2. Calculate the date range (which amounts to a measure of the uncertainty of the dating) and fill
+   the `date_range` column with data. Remember that the dates include negative values (BCE).
 
 ```{r shipwrecks-dates}
 
@@ -65,10 +131,10 @@ shipwrecks_dates <- shipwrecks %>%
 
 Using the updated data, answer these questions:
 
-1. How many shipwrecks are there in the data?
-1. What is the earliest shipwreck?
-2. What is the latest shipwreck?
-3. How many shipwrecks fall between 100 BCE and 100 CE?
+1.  How many shipwrecks are there in the data?
+2.  What is the earliest shipwreck?
+3.  What is the latest shipwreck?
+4.  How many shipwrecks fall between 100 BCE and 100 CE?
 
 ```{r}
 shipwrecks_dates %>% 
@@ -79,13 +145,13 @@ shipwrecks_dates %>%
   )
 ```
 
-
 ## Locations
 
-1. What countries have the shipwrecks been found in?
-2. How many wrecks have been discovered in each country?
-3. How many shipwrecks in the database have a location specified by a valid lat-long pair?
-
+1.  What countries have the shipwrecks been found in?
+2.  The "countries" \``ZZ-Non-Mediterranean` and `International waters` form part of the dataset.
+    Can we mine some other part of the data to supply more information? How might we go about this?
+3.  How many wrecks have been discovered in each country?
+4.  How many shipwrecks in the database have a location specified by a valid lat-long pair?
 
 ### What countries?
 
@@ -94,7 +160,6 @@ wreck_countries <- unique(shipwrecks_dates$country)
 
 wreck_countries
 ```
-
 
 ## Shipwrecks with valid lat-long pair?
 
@@ -119,10 +184,9 @@ shipwrecks_dates %>%
 
 ```
 
-
 ## Main challenge
 
-Try to recreate the graph given in Horden and Purcell (2000) as Table 5. Does the contents of the
+Try to recreate the graph given in Horden and Purcell (2000) as Table 5. Do the contents of the
 Shipwrecks Database, with twenty more years data than Parker 1992, back up the original conclusion?
 
 What improvements can you make to the original presentation of the graph?
@@ -160,18 +224,20 @@ shipwrecks_dates %>%
 
 ```
 
-
-
 ## Bonus challenge
 
-1. Plot the shipwrecks that have valid long-lat coordinates onto a map (use `ggplot` and 
-   `rnaturalearth` for the maps).
-      - Read the `ggplot2` in-progress book (3rd edition) about mapping: \
-         [https://ggplot2-book.org/maps.html](https://ggplot2-book.org/maps.html).
-      - Use these snippets to add a map layer from `rnaturalearth`:
-        - `world <- ne_countries(scale = "medium", returnclass = "sf")`
-        - `ggplot(data = world) + geom_sf()`
-2. Create a faceted set of maps on some variable of your choice, e.g. date ranges.
+1.  Plot the shipwrecks that have valid long-lat coordinates onto a map (use `ggplot` and
+    `rnaturalearth` for the maps).
+
+    -   Read the `ggplot2` in-progress book (3rd edition) about mapping:\
+        <https://ggplot2-book.org/maps.html>.
+
+    -   Use these snippets to add a map layer from `rnaturalearth`:
+
+        -   `world <- ne_countries(scale = "medium", returnclass = "sf")`
+        -   `ggplot(data = world) + geom_sf()`
+
+2.  Create a faceted set of maps on some variable of your choice, e.g. date ranges.
 
 ```{r plot_shipwrecks, fig.height=8}
 # get data for labelling individual countries
@@ -244,3 +310,4 @@ ggplot() +
 ggsave("output/shipwrecks_plot.png", device = png)
 ```
 
+# References
