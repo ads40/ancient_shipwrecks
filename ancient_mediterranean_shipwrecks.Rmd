@@ -51,19 +51,19 @@ This argument depends upon several things:
    storms) remained relatively consistent over the period (2500 BCE to 1500 CE).
    
 3. The third, and perhaps weakest, premise is that wrecks from all periods are equally likely to be
-   discovered.
+   discovered.^[There are genuine complications here: e.g. the type of cargo makes a very big
+   difference in the likelihood of an ancient shipwreck being located, and the change in storage
+   containers from amphorae to barrels by the Medieval period may obscure many sites of Medieval 
+   wrecks -- there is simply no mound of amphorae to be found. See @robinson_developments_2011,
+   @rice_shipwreck_2016, 166-168.]
 
 Given these premises, the number of shipwrecks might then be considered to constitute a fairly
-direct index of the overall level of maritime economic activity in the Mediterranean.^[There are
-genuine complications here: e.g. the type of cargo makes a very big difference in the likelihood of
-an ancient shipwreck being located, and the change in storage containers from amphorae to barrels by
-the Medieval period may obscure many sites of Medieval wrecks -- there is simply no mound of
-amphorae to be found. See @robinson_developments_2011, @rice_shipwreck_2016, 1661-68.]
+direct index of the overall level of maritime economic activity in the Mediterranean.
 
 So: can we recreate this graph using a more recent dataset than Horden and Purcell (who worked from 
 Parker's [-@parker_ancient_1992] book on ancient shipwrecks)? Is Horden and Purcell's argument borne
 out in more up-to-date evidence, especially given the explosion of shipwreck archaeology in the past
-twenty years?^[See @robinson_developments_2011 for a similar re-assessment based on more recent 
+twenty years?^[See @robinson_developments_2011 for a scholarly re-assessment based on more recent 
 data.]
 
 # The Challenge
