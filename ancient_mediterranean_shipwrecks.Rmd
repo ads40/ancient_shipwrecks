@@ -19,38 +19,52 @@ library(ggspatial)
 library(readr)
 library(rnaturalearth)
 library(sf)
+library(stringr)
 library(viridis)
-
-shipwrecks <- read_csv("processed_data/shipwrecks.csv")
 
 ```
 
-The starting point for this challenge is an often-cited graph in Peregrine Horden
-and Nicholas Purcell's book, *The Corrupting Sea* [-@horden2000].
+The starting point for this challenge is an often-cited graph that appears, among other places, in
+Peregrine Horden and Nicholas Purcell's well-known book about the long history of the Mediterranean,
+*The Corrupting Sea* [@horden2000].
 
 ![Horden and Purcell (2000), 371](resources/horden_purcell_mediterranean_shipwrecks.png)
 
-The graph featured by Horden and Purcell is part of a larger argument that the volume of sea-borne
-trade in the Mediterranean was larger in the 2nd century CE than at any other time before the 19th
-century.
+The graph featured by Horden and Purcell is part of a larger argument regularly made by historians
+of the ancient economy that the volume of sea-borne trade in the Mediterranean was larger in the 2nd
+century CE than at any other time before the 19th century.^[For discussion of this use of Parker's
+graph, see @robinson_developments_2011: "His [i.e. Parker's] graph of the number of wrecks per
+century (Figure 2.1) was seized on by ancient historians from Hopkins onward as a means of
+illustrating fluctuations in the levels of Mediterranean maritime trade, taking the number of wrecks
+in any period as a more or less straightforward reflection of the intensity of maritime shipping and
+therefore trade, and has featured in numerous discussions of the Roman economy".
+@callatay_graeco-roman_2005 puts the evidence of shipwrecks in the context of several other directly
+quantitative approaches to the ancient economy over long periods, including lead, silver and 
+copper levels in sediment and ice cores.]
 
 This argument depends upon several things:
 
-1. The first premise is that Mediterranean commercial ship manufacture and sailing techniques
+1. The first premise is that Mediterranean commercial ship building and sailing techniques
    remained relatively consistent from at least 500 BCE until the 16th century CE.
 
 2. The second premise is that the frequency of shipwreck-inducing events in the Mediterranean (e.g.
    storms) remained relatively consistent over the period (2500 BCE to 1500 CE).
+   
+3. The third, and perhaps weakest, premise is that wrecks from all periods are equally likely to be
+   discovered.
 
-Given these premises, the number of shipwrecks can then constitute a fairly direct index of the
-overall level of maritime economic activity in the Mediterranean.^[For a fuller introduction to the
-possibilities and problems of ancient shipwrecks for economic analysis, see 
-@knappett_shipwrecks_2018.]
+Given these premises, the number of shipwrecks might then be considered to constitute a fairly
+direct index of the overall level of maritime economic activity in the Mediterranean.^[There are
+genuine complications here: e.g. the type of cargo makes a very big difference in the likelihood of
+an ancient shipwreck being located, and the change in storage containers from amphorae to barrels by
+the Medieval period may obscure many sites of Medieval wrecks -- there is simply no mound of
+amphorae to be found. See @robinson_developments_2011, @rice_shipwreck_2016, 1661-68.]
 
-Can we recreate this graph using a more recent dataset than Horden and Purcell (who worked from 
+So: can we recreate this graph using a more recent dataset than Horden and Purcell (who worked from 
 Parker's [-@parker_ancient_1992] book on ancient shipwrecks)? Is Horden and Purcell's argument borne
 out in more up-to-date evidence, especially given the explosion of shipwreck archaeology in the past
-twenty years?
+twenty years?^[See @robinson_developments_2011 for a similar re-assessment based on more recent 
+data.]
 
 # The Challenge
 
@@ -61,7 +75,7 @@ forms. These are core tasks in any form of data analysis.
 For each section, there are a set of questions and tasks. Not all of these will be able to be
 answered with the data in its original form.
 
-# Get the data
+## Get the data
 
 Download a copy of the dataset [@strauss_shipwrecks_2013] listed below, import the data, and carry 
 out the following tasks.
@@ -82,25 +96,51 @@ out the following tasks.
    - scrolling to the bottom of the page;
    - finding the link embedded in the text, under the word "here".
 
-3. Import the data into R. Think about how the columns/variables are named, and what data types are
-   imported. You may wish to modify the column names and/or use a `col_types =` argument (see the
-   docs for `readr::read_csv`) to control how the data is imported.
+3. Import the data into R using an R script called `munge_data.R`. Think about how the columns/
+   variables are named, and what data types are imported. You may wish to modify the column names
+   and/or use a `col_types =` argument (see the docs for `readr::read_csv`) to control how the data
+   is imported.
 
-4. Save the data into your project and then make the initial commit in Git.
+4. The `munge_data.R` script should save the cleaned data into your project. Use the function
+   `saveRDS()` to save the cleaned dataset as a file that can then be directly loaded into your
+   analysis.
+
+5. You can then make the initial commit in Git.
+
+   ```
+   # in the Terminal
+   > git status
+   > git add .
+   > git commit -m "Initial commit."
+   ```
+
+5. Create a `.Rmd` file, and start to explore the dataset. Load the dataset into R (using the 
+   pattern `mydataset <- readRDS("path/to/the.RDS"`) and generate an initial summary of the 
+   variables in the dataset. The function `str()` is helpful.
+   
+   Consider these questions:
+   - What does each column contain?
+   - What is the range of values in each column?
+   - What data is missing (consider the NA values, but also other "missing data" values e.g. 0, -1 
+     etc.)?
+
+```{r exploratory_data_analysis}
+
+shipwrecks <- readRDS("processed_data/shipwrecks.RDS")
+
+str(shipwrecks)
+
+sea_area_values <- unique(shipwrecks$sea_area)
+
+country_values <- unique(shipwrecks$country)
+
+
+
 
 ```
-# in the Terminal
-> git status
-> git add .
-> git commit -m "Initial commit."
-```
 
-5. Make an initial summary of the variables in the dataset:
-  - What does each column contain?
-  - What is the range of values in each column?
-  - What data is missing (consider both NA values, and other "missing data" values e.g. 0, -1 etc.)?
 
-# Dates
+## Dates
 
 You may have noticed that columns `date_range` and `mid_point_of_date_range` variables contain only
 zeros. Data is missing here, but it is possible to calculate and fill in values for these columns
