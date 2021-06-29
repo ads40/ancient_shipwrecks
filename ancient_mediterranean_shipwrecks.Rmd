@@ -119,14 +119,16 @@ out the following tasks.
    ```
 
 5. Create a `.Rmd` file, and start to explore the dataset. Load the dataset into R (using the 
-   pattern `mydataset <- readRDS("path/to/the.RDS"`) and generate an initial summary of the 
-   variables in the dataset. The function `str()` is helpful.
+   pattern `mydataset <- readRDS("path/to/the.RDS"`) and explore the variables in the dataset. 
+   The function `str()` is helpful.
    
    Consider these questions:
    - What does each column contain?
    - What is the range of values in each column?
    - What data is missing (consider the NA values, but also other "missing data" values e.g. 0, -1 
      etc.)?
+
+6. How many shipwrecks are there in the dataset?
 
 ```{r exploratory_data_analysis}
 
@@ -138,11 +140,12 @@ sea_area_values <- unique(shipwrecks$sea_area)
 
 country_values <- unique(shipwrecks$country)
 
+shipwrecks %>% 
+  summarise(count = n())
 
 
 
 ```
-
 
 ## Dates
 
@@ -175,29 +178,45 @@ shipwrecks_dates <- shipwrecks %>%
 
 Using the updated data, answer these questions:
 
-1.  How many shipwrecks are there in the data?
-2.  What is the earliest shipwreck?
-3.  What is the latest shipwreck?
-4.  How many shipwrecks fall between 100 BCE and 100 CE?
+1.  What is the earliest shipwreck?
+1.  What is the latest shipwreck?
+1.  How many shipwrecks fall between 100 BCE and 100 CE?
 
 ```{r}
+
 shipwrecks_dates %>% 
   summarise(
-    count = n(),
     earliest = min(mid_point_of_date_range, na.rm = TRUE),
-    latest = max(mid_point_of_date_range, na.rm = TRUE)
+    latest = max(mid_point_of_date_range, na.rm = TRUE),
+    # sum a logical vector to count the TRUEs by taking advantage of coercion
+    count_100BCE_100CE = sum(between(mid_point_of_date_range, -101, 101), na.rm = TRUE)
   )
+
 ```
+
+### Extension
+
+If the date range amounts to a measure of uncertainty about the precision of the mid-point, consider
+how you might subset the data into wrecks with relatively more certain and relatively less certain
+dates.
 
 ## Locations
 
-1.  What countries have the shipwrecks been found in?
-2.  The "countries" \``ZZ-Non-Mediterranean` and `International waters` form part of the dataset.
-    Can we mine some other part of the data to supply more information? How might we go about this?
-3.  How many wrecks have been discovered in each country?
-4.  How many shipwrecks in the database have a location specified by a valid lat-long pair?
+There is lots of geographical data in the dataset, although it is patchy in its distribution.
 
-### What countries?
+1. What countries have the shipwrecks been found in?
+2. The "countries" \``ZZ-Non-Mediterranean` and `International waters` form part of the dataset.
+   Can we mine some other part of the data to supply more information? How might we go about this?
+3. How many wrecks have been discovered in each country?
+3. What problems are there with the data in the `country` column? How could we fix this?
+4. How many shipwrecks in the database have a location specified by a valid lat-long pair?
+
+### Extension
+
+What strategies could you adopt to add more (at least approximate) lat-long pairs for shipwrecks in
+the data that don't have geocoding? Consider e.g. how text-mining and the API services (free tier)
+provided by [https://pickpoint.io/](https://pickpoint.io/) could be used to enhance the existing
+data. What challenges are there here? Are all the wrecks in the sea?
 
 ```{r}
 wreck_countries <- unique(shipwrecks_dates$country)
@@ -205,9 +224,11 @@ wreck_countries <- unique(shipwrecks_dates$country)
 wreck_countries
 ```
 
-## Shipwrecks with valid lat-long pair?
-
 ```{r valid-lat-long-count}
+
+shipwrecks_dates %>% 
+  group_by(country) %>% 
+  summarise(total = n())
 
 shipwrecks_dates %>% 
   filter(
@@ -228,7 +249,7 @@ shipwrecks_dates %>%
 
 ```
 
-## Main challenge
+## The histogram
 
 Try to recreate the graph given in Horden and Purcell (2000) as Table 5. Do the contents of the
 Shipwrecks Database, with twenty more years data than Parker 1992, back up the original conclusion?
@@ -268,18 +289,21 @@ shipwrecks_dates %>%
 
 ```
 
-## Bonus challenge
+# Bonus challenges
+
+## Maps
 
 1.  Plot the shipwrecks that have valid long-lat coordinates onto a map (use `ggplot` and
     `rnaturalearth` for the maps).
 
-    -   Read the `ggplot2` in-progress book (3rd edition) about mapping:\
-        <https://ggplot2-book.org/maps.html>.
+    - Read the `ggplot2` in-progress book (3rd edition) about mapping:
+      <https://ggplot2-book.org/maps.html>.
+    - Use these snippets to add a map layer from `rnaturalearth`:
+    
+      - `world <- ne_countries(scale = "medium", returnclass = "sf")`
+      - `ggplot(data = world) + geom_sf()`
 
-    -   Use these snippets to add a map layer from `rnaturalearth`:
-
-        -   `world <- ne_countries(scale = "medium", returnclass = "sf")`
-        -   `ggplot(data = world) + geom_sf()`
+## Facets
 
 2.  Create a faceted set of maps on some variable of your choice, e.g. date ranges.
 
@@ -315,7 +339,7 @@ ggplot() +
       y = latitude, 
       colour = mid_point_of_date_range,
     ), 
-    alpha = 0.75, size = 3
+    alpha = 0.75, size = 2
   ) +
   # add labels for relevant countries
   geom_label(
