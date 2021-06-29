@@ -1,6 +1,6 @@
 #####################################################################################
 #
-# Import shipwrecks data into RData
+# Import shipwrecks data into RDS file
 #
 # Source: Strauss, J. (2013). Shipwrecks Database. Version 1.0.
 #         Accessed (date): oxrep.classics.ox.ac.uk/databases/shipwrecks_database/
@@ -53,4 +53,7 @@ col_spec <- cols(
 df <- read_csv(raw_file, col_types = col_spec) %>%
   rename_with(~ tolower(gsub(" ", "_", .x, fixed = TRUE)))
 
-write_csv(df, "processed_data/shipwrecks.csv")
+# RDS is the better choice: one object per file, and you assign the assign the result of
+# `readRDS` to a name of your choosing.
+
+saveRDS(df, "processed_data/shipwrecks.RDS")
