@@ -37,10 +37,14 @@ graph, see @robinson_developments_2011: "His [i.e. Parker's] graph of the number
 century (Figure 2.1) was seized on by ancient historians from Hopkins onward as a means of
 illustrating fluctuations in the levels of Mediterranean maritime trade, taking the number of wrecks
 in any period as a more or less straightforward reflection of the intensity of maritime shipping and
-therefore trade, and has featured in numerous discussions of the Roman economy".
+therefore trade, and has featured in numerous discussions of the Roman economy";
+@justin_leidwanger_time_2017, 596: "Parker’s most famous histogram from this volume -- illustrating
+the number of known shipwrecks by century -- has since been reproduced in so many contexts that it
+now essentially serves as shorthand for the increase and decrease in maritime activity over the
+Graeco-Roman period and, more generally, the long-term growth and decline of the ancient economy".
 @callatay_graeco-roman_2005 puts the evidence of shipwrecks in the context of several other directly
-quantitative approaches to the ancient economy over long periods, including lead, silver and 
-copper levels in sediment and ice cores.]
+quantitative approaches to the ancient economy over long periods, including lead, silver and copper
+levels in sediment and ice cores.]
 
 This argument depends upon several things:
 
